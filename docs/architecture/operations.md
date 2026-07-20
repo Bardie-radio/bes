@@ -9,8 +9,9 @@ Env and runtime knobs for the **Bes** container.
 | `MODULE_SLUG_OVERRIDE` | Optional |
 | JWT signing / TTL | Access + refresh lifetime (Bes-owned) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | External collector |
+| `BARDIE_HTTP_ENABLED` | Sketch — optional HTTP on the adapter. External hosts normally embed the **auth module orchestrator** library. See [03-optional-http](03-optional-http.md) |
 
-No public ports. No Bes-side user DB volume — persistence is Kithara’s.
+Bardie mode: no public ports. No Bes-side user DB volume — persistence is Kithara’s (or the host app’s when HTTP is used outside Bardie).
 
 ## Observability
 
