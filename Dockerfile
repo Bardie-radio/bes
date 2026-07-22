@@ -20,21 +20,24 @@ COPY bes/src/Bes/Bes.csproj bes/src/Bes/
 RUN dotnet restore bes/src/Bes/Bes.csproj
 
 COPY bes/src/Bes/ bes/src/Bes/
-RUN dotnet publish bes/src/Bes/Bes.csproj -c Release -o /app/publish --no-restore
+# Allow publish to restore again — --no-restore breaks when transitive packages
+# (e.g. Google.Protobuf via Bardie.Contracts) were incomplete in the restore layer.
+RUN dotnet publish bes/src/Bes/Bes.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/ \
-    && groupadd --gid 1000 bes \
-    && useradd --uid 1000 --gid bes --create-home bes
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /data/mtls \
+    && chown -R "$APP_UID":"$APP_UID" /data /app
 
 COPY --from=build /app/publish .
-RUN mkdir -p /data/mtls && chown -R bes:bes /data /app
+RUN chown -R "$APP_UID":"$APP_UID" /app
 
-USER bes
+# aspnet:10.0 already ships a non-root user (APP_UID); GID 1000 is taken.
+USER $APP_UID
 ENV ASPNETCORE_URLS= \
     MODULE_TLS_DATA_PATH=/data/mtls \
     MODULE_WORK_GRPC_PORT=5001

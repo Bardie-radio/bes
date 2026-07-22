@@ -4,11 +4,11 @@ Login + password **auth adapter** for Bardie — mints JWTs; Kithara stores user
 
 | | |
 |--|--|
-| **Status** | **MVP Phase 2 (implementing)** |
+| **Status** | **MVP Phase 2 complete** — auth adapter live beside Kithara |
 | **Image / Compose** | `bes` |
 | **OTel** | `bardie.auth.bes` (from `module.manifest.json`) |
 | **Slug** | `bes` |
-| **Discovery** | `form_schema` (Authenticate/JWKS next) |
+| **Discovery** | `form_schema` (username/password) |
 
 Architecture: [docs/architecture](docs/architecture/README.md).
 
