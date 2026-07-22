@@ -10,26 +10,22 @@
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" />
-    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
-    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.GrpcNetClient" />
   </ItemGroup>
 
   <!-- Multi-root / Local Compose: sibling ProjectReference when ../kithara/libs exists. -->
   <ItemGroup Condition="'$(BardieLibsPath)' != ''">
     <ProjectReference Include="$(BardieLibsPath)/Bardie.Contracts/Bardie.Contracts.csproj" />
     <ProjectReference Include="$(BardieLibsPath)/Bardie.Module.Channel/Bardie.Module.Channel.csproj" />
+    <ProjectReference Include="$(BardieLibsPath)/Bardie.Module.Hosting/Bardie.Module.Hosting.csproj" />
+    <ProjectReference Include="$(BardieLibsPath)/Bardie.Module.Auth/Bardie.Module.Auth.csproj" />
   </ItemGroup>
 
   <!-- Standalone CI / published nupkgs. -->
   <ItemGroup Condition="'$(BardieLibsPath)' == ''">
     <PackageReference Include="Bardie.Contracts" />
     <PackageReference Include="Bardie.Module.Channel" />
+    <PackageReference Include="Bardie.Module.Hosting" />
+    <PackageReference Include="Bardie.Module.Auth" />
   </ItemGroup>
 
   <ItemGroup>

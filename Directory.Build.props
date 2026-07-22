@@ -10,5 +10,9 @@
     <BardieContractsVersion>0.1.0</BardieContractsVersion>
     <!-- Package: Bardie.Module.Channel -->
     <BardieModuleChannelVersion>0.1.0</BardieModuleChannelVersion>
+    <!-- Package: Bardie.Module.Hosting -->
+    <BardieModuleHostingVersion>0.1.0</BardieModuleHostingVersion>
+    <!-- Package: Bardie.Module.Auth -->
+    <BardieModuleAuthVersion>0.1.0</BardieModuleAuthVersion>
   </PropertyGroup>
 </Project>

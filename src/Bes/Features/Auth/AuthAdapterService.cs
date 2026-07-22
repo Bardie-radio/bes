@@ -1,5 +1,6 @@
 using System.Text;
 using Bardie.Auth.V1;
+using Bardie.Module.Auth;
 using Bardie.Module.Channel.Manifest;
 using Google.Protobuf;
 using Grpc.Core;
@@ -7,35 +8,31 @@ using Grpc.Core;
 namespace Bes.Features.Auth;
 
 /// <summary>AuthAdapter gRPC façade — commands live in password + JWT services.</summary>
-public sealed class AuthAdapterService : AuthAdapter.AuthAdapterBase
+public sealed class AuthAdapterService : AuthAdapterModuleBase
 {
-    private readonly ModuleManifest _manifest;
     private readonly BesPasswordService _passwords;
-    private readonly BesJwtTokenService _tokens;
+    private readonly AuthModuleJwtService _tokens;
     private readonly ILogger<AuthAdapterService> _logger;
 
     public AuthAdapterService(
         ModuleManifest manifest,
         BesPasswordService passwords,
-        BesJwtTokenService tokens,
+        AuthModuleJwtService tokens,
         ILogger<AuthAdapterService> logger)
+        : base(manifest)
     {
-        _manifest = manifest;
         _passwords = passwords;
         _tokens = tokens;
         _logger = logger;
     }
-
-    public override Task<HealthResponse> Health(HealthRequest request, ServerCallContext context) =>
-        Task.FromResult(new HealthResponse { Ok = true });
 
     public override Task<GetProvidersResponse> GetProviders(GetProvidersRequest request, ServerCallContext context)
     {
         var response = new GetProvidersResponse();
         response.Providers.Add(new ProviderDescriptor
         {
-            Id = _manifest.Slug,
-            DisplayName = string.IsNullOrWhiteSpace(_manifest.DisplayName) ? "Bes" : _manifest.DisplayName,
+            Id = Manifest.Slug,
+            DisplayName = string.IsNullOrWhiteSpace(Manifest.DisplayName) ? "Bes" : Manifest.DisplayName,
             FormSchema = new FormSchemaUi
             {
                 Fields =
@@ -62,8 +59,7 @@ public sealed class AuthAdapterService : AuthAdapter.AuthAdapterBase
 
     public override Task<AuthenticateResponse> Authenticate(AuthenticateRequest request, ServerCallContext context)
     {
-        if (!string.Equals(request.ProviderId, _manifest.Slug, StringComparison.OrdinalIgnoreCase)
-            && !string.IsNullOrWhiteSpace(request.ProviderId))
+        if (!MatchesProviderId(request.ProviderId))
         {
             return Task.FromResult(Denied());
         }
@@ -109,8 +105,7 @@ public sealed class AuthAdapterService : AuthAdapter.AuthAdapterBase
 
     public override Task<RefreshResponse> Refresh(RefreshRequest request, ServerCallContext context)
     {
-        if (!string.Equals(request.ProviderId, _manifest.Slug, StringComparison.OrdinalIgnoreCase)
-            && !string.IsNullOrWhiteSpace(request.ProviderId))
+        if (!MatchesProviderId(request.ProviderId))
         {
             return Task.FromResult(new RefreshResponse { Allowed = false });
         }
@@ -160,10 +155,4 @@ public sealed class AuthAdapterService : AuthAdapter.AuthAdapterBase
         response.Roles.Add("admin");
         return Task.FromResult(response);
     }
-
-    private static AuthenticateResponse Denied() => new()
-    {
-        Allowed = false,
-        TokenType = "Bearer",
-    };
 }
