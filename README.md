@@ -23,7 +23,7 @@ Directory.Build.props    ProjectReference ↔ PackageReference hybrid
 
 ## Libs
 
-When `../kithara/libs` exists (multi-root workspace), Bes uses **ProjectReference** to `Bardie.Contracts` + `Bardie.ModuleChannel`. Otherwise **PackageReference** to the published `0.1.0` packages — no proto copies.
+When `../kithara/libs` exists (multi-root workspace), Bes uses **ProjectReference** to `Bardie.Contracts` + `Bardie.Module.Channel`. Otherwise **PackageReference** to the published `0.1.0` packages — no proto copies.
 
 ```bash
 dotnet run --project src/Bes

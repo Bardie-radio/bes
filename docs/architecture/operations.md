@@ -18,7 +18,7 @@ Env and runtime knobs for the **Bes** container.
 
 Bardie mode: no public ports for auth ceremony. HTTP `:8080` is health only. No Bes-side user DB volume — persistence is Kithara’s (or the host app’s when HTTP is used outside Bardie).
 
-Static identity (`slug`, `kind`, `capabilities`, `otelServiceName`) lives in **`module.manifest.json`** only. ModuleChannel options stay host-agnostic; Bes maps `KITHARA_*` / `BARDIE_*` Compose names in `BesModuleParticipantEnv`.
+Static identity (`slug`, `kind`, `capabilities`, `otelServiceName`) lives in **`module.manifest.json`** only. ModuleChannel options stay host-agnostic; Bes maps `KITHARA_*` / `BARDIE_*` Compose names via **`Bardie.Module.Hosting`** (`BardieComposeParticipantEnv`). JWT minting and JWKS Register attach via **`Bardie.Module.Auth`**.
 
 ## Observability
 
