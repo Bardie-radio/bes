@@ -1,0 +1,7 @@
+{
+  "slug": "bes",
+  "kind": "auth",
+  "displayName": "Bes",
+  "otelServiceName": "bardie.auth.bes",
+  "capabilities": ["seedAdmin"]
+}
