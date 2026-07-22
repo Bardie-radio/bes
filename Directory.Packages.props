@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Bardie.Contracts" Version="0.1.0" />
-    <PackageVersion Include="Bardie.ModuleChannel" Version="0.1.0" />
+    <PackageVersion Include="Bardie.Module.Channel" Version="0.1.0" />
 
     <PackageVersion Include="Grpc.AspNetCore" Version="2.80.0" />
 

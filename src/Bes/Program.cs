@@ -1,5 +1,5 @@
-using Bardie.ModuleChannel.Manifest;
-using Bardie.ModuleChannel.Participant;
+using Bardie.Module.Channel.Manifest;
+using Bardie.Module.Channel.Participant;
 using Bes.Features.Auth;
 using Bes.Infrastructure.Observability;
 using Bes.Infrastructure.Registration;

@@ -1,4 +1,4 @@
-using Bardie.ModuleChannel.Manifest;
+using Bardie.Module.Channel.Manifest;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;

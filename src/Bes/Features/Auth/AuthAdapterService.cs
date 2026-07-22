@@ -1,6 +1,6 @@
 using System.Text;
 using Bardie.Auth.V1;
-using Bardie.ModuleChannel.Manifest;
+using Bardie.Module.Channel.Manifest;
 using Google.Protobuf;
 using Grpc.Core;
 

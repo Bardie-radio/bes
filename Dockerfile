@@ -13,7 +13,7 @@ WORKDIR /src
 
 COPY kithara/Directory.Build.props kithara/Directory.Packages.props kithara/
 COPY kithara/libs/Bardie.Contracts kithara/libs/Bardie.Contracts/
-COPY kithara/libs/Bardie.ModuleChannel kithara/libs/Bardie.ModuleChannel/
+COPY kithara/libs/Bardie.Module.Channel kithara/libs/Bardie.Module.Channel/
 
 COPY bes/Directory.Build.props bes/Directory.Packages.props bes/
 COPY bes/src/Bes/Bes.csproj bes/src/Bes/

@@ -1,4 +1,4 @@
-using Bardie.ModuleChannel.Participant;
+using Bardie.Module.Channel.Participant;
 using Microsoft.Extensions.Options;
 
 namespace Bes.Infrastructure.Registration;

@@ -23,13 +23,13 @@
   <!-- Multi-root / Local Compose: sibling ProjectReference when ../kithara/libs exists. -->
   <ItemGroup Condition="'$(BardieLibsPath)' != ''">
     <ProjectReference Include="$(BardieLibsPath)/Bardie.Contracts/Bardie.Contracts.csproj" />
-    <ProjectReference Include="$(BardieLibsPath)/Bardie.ModuleChannel/Bardie.ModuleChannel.csproj" />
+    <ProjectReference Include="$(BardieLibsPath)/Bardie.Module.Channel/Bardie.Module.Channel.csproj" />
   </ItemGroup>
 
   <!-- Standalone CI / published nupkgs. -->
   <ItemGroup Condition="'$(BardieLibsPath)' == ''">
     <PackageReference Include="Bardie.Contracts" />
-    <PackageReference Include="Bardie.ModuleChannel" />
+    <PackageReference Include="Bardie.Module.Channel" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Bardie.ModuleChannel.Manifest;
+using Bardie.Module.Channel.Manifest;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
