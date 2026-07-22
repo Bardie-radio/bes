@@ -15,7 +15,7 @@ Architecture: [docs/architecture](docs/architecture/README.md).
 ## Layout
 
 ```text
-src/Bes/                 ASP.NET host (gRPC AuthAdapter + ModuleChannel participant)
+src/Bes/                 ASP.NET host (gRPC AuthAdapter + Module.* participant)
   module.manifest.json   Static Register identity + OTel name
 Dockerfile               Multi-stage; build from parent dir with sibling kithara/
 Directory.Build.props    ProjectReference ↔ PackageReference hybrid
@@ -23,7 +23,7 @@ Directory.Build.props    ProjectReference ↔ PackageReference hybrid
 
 ## Libs
 
-When `../kithara/libs` exists (multi-root workspace), Bes uses **ProjectReference** to `Bardie.Contracts` + `Bardie.Module.Channel`. Otherwise **PackageReference** to the published `0.1.0` packages — no proto copies.
+When `../kithara/libs` exists (multi-root workspace), Bes uses **ProjectReference** to `Bardie.Contracts`, `Bardie.Module.Channel`, `Bardie.Module.Hosting`, and `Bardie.Module.Auth`. Otherwise **PackageReference** to the published `0.1.0` packages — no proto copies.
 
 ```bash
 dotnet run --project src/Bes
