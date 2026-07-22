@@ -8,7 +8,9 @@ Implement work verbs as **commands** (handlers) behind a small interface. The gR
 
 ## Registration
 
-Module Registry `Register` (dial Kithara) with slug `bes`, **join secret**, JWKS (or JWKS URI), capability **`seedAdmin`**. gRPC stays internal.
+Module Registry `Register` (dial Kithara) uses generic **`module.manifest.json`** identity (slug `bes`, kind `auth`, capability **`seedAdmin`**) plus env overlays (join secret, advertise address). Bes attaches runtime JWKS via an `IModuleRegisterRequestCustomizer` — not via typed auth bags on the shared ModuleChannel manifest.
+
+MVP advertises **`seedAdmin` only**. Reserved for later (do not advertise until implemented): `selfRegister`, `passwordReset` — see [kithara grpc-auth-adapter](https://github.com/Bardie-radio/kithara/blob/main/docs/architecture/interfaces/grpc-auth-adapter.md) and [module-channel capabilities](https://github.com/Bardie-radio/kithara/blob/main/docs/architecture/operations/module-channel.md). Account linking is Kithara-owned, not a Bes capability.
 
 ## GetProviders
 
