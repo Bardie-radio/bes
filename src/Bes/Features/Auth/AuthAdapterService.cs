@@ -10,6 +10,9 @@ namespace Bes.Features.Auth;
 /// <summary>AuthAdapter gRPC façade — commands live in password + JWT services.</summary>
 public sealed class AuthAdapterService : AuthAdapterModuleBase
 {
+    private static readonly string[] DefaultRoles = ["user"];
+    private static readonly string[] AdminRoles = ["admin"];
+
     private readonly BesPasswordService _passwords;
     private readonly AuthModuleJwtService _tokens;
     private readonly ILogger<AuthAdapterService> _logger;
@@ -49,40 +52,61 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
 
         request.Payload.TryGetValue("username", out var username);
         request.Payload.TryGetValue("password", out var password);
+        request.Payload.TryGetValue("new_password", out var newPassword);
         username = username?.Trim();
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
             return Task.FromResult(Denied());
         }
 
-        var existingHash = BesPasswordService.TryReadPasswordHash(request.ExistingBindingPayload.Span);
-        if (existingHash is null)
+        var binding = BesPasswordService.TryReadBinding(request.ExistingBindingPayload.Span);
+        if (binding is null)
         {
             // No binding yet — login requires a prior SeedAdmin (or future selfRegister).
             _logger.LogInformation("Authenticate rejected for {User}: no binding payload.", username);
             return Task.FromResult(Denied());
         }
 
-        if (!_passwords.Verify(existingHash, password))
+        if (!_passwords.Verify(binding.PasswordHash, password))
         {
             _logger.LogInformation("Authenticate rejected for {User}: bad password.", username);
             return Task.FromResult(Denied());
         }
 
-        var (access, refresh, expiresIn) = _tokens.MintTokens(username, mustRotateCredentials: false, roles: ["admin"]);
+        // SEC-07: roles from binding; SeedAdmin alone creates admin. Missing roles → user.
+        var roles = binding.Roles.Count > 0 ? binding.Roles.ToArray() : DefaultRoles;
+        var mustRotate = binding.MustRotate;
+        var passwordHash = binding.PasswordHash;
+
+        // SEC-03: password change clears must_rotate (Authenticate bag: new_password).
+        if (!string.IsNullOrWhiteSpace(newPassword))
+        {
+            if (newPassword.Length < 8)
+            {
+                _logger.LogInformation("Authenticate rejected for {User}: new_password too short.", username);
+                return Task.FromResult(Denied());
+            }
+
+            passwordHash = _passwords.HashPassword(newPassword);
+            mustRotate = false;
+            _logger.LogInformation("Password rotated for subject {Subject}.", username);
+        }
+
+        var (access, refresh, expiresIn) = _tokens.MintTokens(username, mustRotate, roles);
         var response = new AuthenticateResponse
         {
             Allowed = true,
             ExternalSubject = username,
             EnsureUser = true,
-            BindingPayload = ByteString.CopyFrom(BesPasswordService.BuildBindingPayloadBytes(existingHash)),
+            BindingPayload = ByteString.CopyFrom(
+                BesPasswordService.BuildBindingPayloadBytes(passwordHash, roles, mustRotate)),
             AccessToken = access,
             RefreshToken = refresh,
             TokenType = "Bearer",
             ExpiresIn = expiresIn,
-            MustRotateCredentials = false,
+            MustRotateCredentials = mustRotate,
         };
-        response.Roles.Add("admin");
+        response.Roles.AddRange(roles);
         return Task.FromResult(response);
     }
 
@@ -93,13 +117,15 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
             return Task.FromResult(new RefreshResponse { Allowed = false });
         }
 
-        var (ok, subject, mustRotate) = _tokens.TryValidateRefresh(request.RefreshToken);
+        var (ok, subject, mustRotate, roles) = _tokens.TryValidateRefresh(request.RefreshToken);
         if (!ok || string.IsNullOrWhiteSpace(subject))
         {
             return Task.FromResult(new RefreshResponse { Allowed = false });
         }
 
-        var (access, refresh, expiresIn) = _tokens.MintTokens(subject, mustRotate, roles: ["admin"]);
+        // SEC-07: remint with roles carried on the refresh token (not hardcoded admin).
+        var effectiveRoles = roles.Count > 0 ? roles : DefaultRoles;
+        var (access, refresh, expiresIn) = _tokens.MintTokens(subject, mustRotate, effectiveRoles);
         return Task.FromResult(new RefreshResponse
         {
             Allowed = true,
@@ -121,7 +147,7 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
             .Append(username)
             .Append("' with one-time password: ")
             .Append(password)
-            .Append(". Change it on first login (must_rotate_credentials).")
+            .Append(". Change it on first login (must_rotate_credentials; send new_password).")
             .ToString();
 
         _logger.LogInformation("SeedAdmin created subject {Subject} (password only in welcome text for Kithara logs).", username);
@@ -131,11 +157,12 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
             Created = true,
             WelcomeLogText = welcome,
             ExternalSubject = username,
-            BindingPayload = ByteString.CopyFrom(BesPasswordService.BuildBindingPayloadBytes(hash)),
+            BindingPayload = ByteString.CopyFrom(
+                BesPasswordService.BuildBindingPayloadBytes(hash, AdminRoles, mustRotate: true)),
             EnsureUser = true,
             MustRotateCredentials = true,
         };
-        response.Roles.Add("admin");
+        response.Roles.AddRange(AdminRoles);
         return Task.FromResult(response);
     }
 }

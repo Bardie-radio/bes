@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Identity;
 
 namespace Bes.Features.Auth;
@@ -20,13 +21,21 @@ public sealed class BesPasswordService
             or PasswordVerificationResult.SuccessRehashNeeded;
     }
 
-    public static string BuildBindingPayloadJson(string passwordHash) =>
-        JsonSerializer.Serialize(new BindingPayload { PasswordHash = passwordHash });
+    public static byte[] BuildBindingPayloadBytes(
+        string passwordHash,
+        IReadOnlyList<string> roles,
+        bool mustRotate)
+    {
+        var payload = new BindingPayload
+        {
+            PasswordHash = passwordHash,
+            Roles = roles.ToList(),
+            MustRotate = mustRotate,
+        };
+        return Encoding.UTF8.GetBytes(JsonSerializer.Serialize(payload));
+    }
 
-    public static byte[] BuildBindingPayloadBytes(string passwordHash) =>
-        Encoding.UTF8.GetBytes(BuildBindingPayloadJson(passwordHash));
-
-    public static string? TryReadPasswordHash(ReadOnlySpan<byte> bindingPayload)
+    public static BindingState? TryReadBinding(ReadOnlySpan<byte> bindingPayload)
     {
         if (bindingPayload.IsEmpty)
         {
@@ -36,13 +45,29 @@ public sealed class BesPasswordService
         try
         {
             var payload = JsonSerializer.Deserialize<BindingPayload>(bindingPayload);
-            return string.IsNullOrWhiteSpace(payload?.PasswordHash) ? null : payload.PasswordHash;
+            if (payload is null || string.IsNullOrWhiteSpace(payload.PasswordHash))
+            {
+                return null;
+            }
+
+            var roles = payload.Roles?
+                .Where(r => !string.IsNullOrWhiteSpace(r))
+                .Select(r => r.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray()
+                ?? [];
+
+            return new BindingState(payload.PasswordHash, roles, payload.MustRotate);
         }
         catch (JsonException)
         {
             return null;
         }
     }
+
+    /// <summary>Legacy helper — password hash only (roles/rotate read separately).</summary>
+    public static string? TryReadPasswordHash(ReadOnlySpan<byte> bindingPayload) =>
+        TryReadBinding(bindingPayload)?.PasswordHash;
 
     public static string GenerateRandomPassword(int length = 20)
     {
@@ -57,8 +82,16 @@ public sealed class BesPasswordService
         return new string(chars);
     }
 
+    public sealed record BindingState(string PasswordHash, IReadOnlyList<string> Roles, bool MustRotate);
+
     private sealed class BindingPayload
     {
         public string PasswordHash { get; set; } = string.Empty;
+
+        [JsonPropertyName("roles")]
+        public List<string>? Roles { get; set; }
+
+        [JsonPropertyName("mustRotate")]
+        public bool MustRotate { get; set; }
     }
 }
