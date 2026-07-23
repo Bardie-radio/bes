@@ -11,7 +11,11 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 var manifest = builder.AddBardieModuleHosting(
-    configure: options => options.ServerDnsNames = ["bes", "localhost"],
+    configure: options =>
+    {
+        options.ServerDnsNames = ["bes", "localhost"];
+        options.ExpectedHostClientIdentity = "kithara";
+    },
     otelFallbackServiceName: "bardie.auth.bes");
 
 builder.Services.AddAuthModuleJwt(builder.Configuration);
