@@ -33,26 +33,9 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
         {
             Id = Manifest.Slug,
             DisplayName = string.IsNullOrWhiteSpace(Manifest.DisplayName) ? "Bes" : Manifest.DisplayName,
-            FormSchema = new FormSchemaUi
-            {
-                Fields =
-                {
-                    new FormField
-                    {
-                        Name = "username",
-                        Label = "Username",
-                        InputType = "text",
-                        Required = true,
-                    },
-                    new FormField
-                    {
-                        Name = "password",
-                        Label = "Password",
-                        InputType = "password",
-                        Required = true,
-                    },
-                },
-            },
+            FormSchema = ModuleManifestAuthBag.TryBuildFormSchema(Manifest)
+                ?? throw new InvalidOperationException(
+                    "Bes module.manifest.json must declare auth.formFields for GetProviders."),
         });
         return Task.FromResult(response);
     }
