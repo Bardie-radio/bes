@@ -3,5 +3,11 @@
   "kind": "auth",
   "displayName": "Bes",
   "otelServiceName": "bardie.auth.bes",
-  "capabilities": ["seedAdmin"]
+  "capabilities": ["seedAdmin"],
+  "auth": {
+    "formFields": [
+      { "name": "username", "label": "Username", "inputType": "text", "required": true },
+      { "name": "password", "label": "Password", "inputType": "password", "required": true }
+    ]
+  }
 }

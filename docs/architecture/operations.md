@@ -4,8 +4,8 @@ Env and runtime knobs for the **Bes** container.
 
 | Variable | Role |
 |----------|------|
-| `KITHARA_GRPC_ADDRESS` | Bardie Compose alias → ModuleChannel `HostGrpcAddress` (scheme optional; defaults to `https://`) |
-| `MODULE_HOST_GRPC_ADDRESS` | Generic ModuleChannel dial target (used when not on Bardie Compose) |
+| `KITHARA_GRPC_ADDRESS` | Bardie Compose alias → Module.Channel `HostGrpcAddress` via `Bardie.Module.Hosting` (scheme optional; defaults to `https://`) |
+| `MODULE_HOST_GRPC_ADDRESS` | Generic Module.Channel dial target (used when not on Bardie Compose) |
 | `JOIN_SECRET` / `BARDIE_JOIN_SECRET` | Match Kithara `BARDIE_JOIN_SECRETS` for slug `bes` |
 | `GRPC_ADVERTISE_ADDRESS` | Where Kithara dials Bes work gRPC (e.g. `dns:///bes:5001` or `https://bes:5001`) |
 | `MODULE_SLUG_OVERRIDE` | Optional override of manifest slug |
@@ -18,7 +18,7 @@ Env and runtime knobs for the **Bes** container.
 
 Bardie mode: no public ports for auth ceremony. HTTP `:8080` is health only. No Bes-side user DB volume — persistence is Kithara’s (or the host app’s when HTTP is used outside Bardie).
 
-Static identity (`slug`, `kind`, `capabilities`, `otelServiceName`) lives in **`module.manifest.json`** only. ModuleChannel options stay host-agnostic; Bes maps `KITHARA_*` / `BARDIE_*` Compose names in `BesModuleParticipantEnv`.
+Static identity (`slug`, `kind`, `capabilities`, `otelServiceName`) lives in **`module.manifest.json`** only. ModuleChannel options stay host-agnostic; Bes maps `KITHARA_*` / `BARDIE_*` Compose names via **`Bardie.Module.Hosting`** (`BardieComposeParticipantEnv`). JWT minting and JWKS Register attach via **`Bardie.Module.Auth`**.
 
 ## Observability
 
