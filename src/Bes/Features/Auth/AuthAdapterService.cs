@@ -73,12 +73,12 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
             return Task.FromResult(Denied());
         }
 
-        // SEC-07: roles from binding; SeedAdmin alone creates admin. Missing roles → user.
+        // AUTH-ROLE-001: roles from binding; SeedAdmin alone creates admin. Missing roles → user.
         var roles = binding.Roles.Count > 0 ? binding.Roles.ToArray() : DefaultRoles;
         var mustRotate = binding.MustRotate;
         var passwordHash = binding.PasswordHash;
 
-        // SEC-03: password change clears must_rotate (Authenticate bag: new_password).
+        // AUTH-ROT-001: password change clears must_rotate (Authenticate bag: new_password).
         if (!string.IsNullOrWhiteSpace(newPassword))
         {
             if (newPassword.Length < 8)
@@ -123,7 +123,7 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
             return Task.FromResult(new RefreshResponse { Allowed = false });
         }
 
-        // SEC-07: remint with roles carried on the refresh token (not hardcoded admin).
+        // AUTH-ROLE-001: remint with roles carried on the refresh token (not hardcoded admin).
         var effectiveRoles = roles.Count > 0 ? roles : DefaultRoles;
         var (access, refresh, expiresIn) = _tokens.MintTokens(subject, mustRotate, effectiveRoles);
         return Task.FromResult(new RefreshResponse
