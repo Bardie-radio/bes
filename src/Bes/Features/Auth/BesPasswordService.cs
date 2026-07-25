@@ -69,19 +69,6 @@ public sealed class BesPasswordService
     public static string? TryReadPasswordHash(ReadOnlySpan<byte> bindingPayload) =>
         TryReadBinding(bindingPayload)?.PasswordHash;
 
-    public static string GenerateRandomPassword(int length = 20)
-    {
-        const string alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
-        var bytes = RandomNumberGenerator.GetBytes(length);
-        var chars = new char[length];
-        for (var i = 0; i < length; i++)
-        {
-            chars[i] = alphabet[bytes[i] % alphabet.Length];
-        }
-
-        return new string(chars);
-    }
-
     public sealed record BindingState(string PasswordHash, IReadOnlyList<string> Roles, bool MustRotate);
 
     private sealed class BindingPayload

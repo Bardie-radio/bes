@@ -1,4 +1,3 @@
-using System.Text;
 using Bardie.Auth.V1;
 using Bardie.Module.Auth;
 using Bardie.Module.Channel.Manifest;
@@ -11,7 +10,6 @@ namespace Bes.Features.Auth;
 public sealed class AuthAdapterService : AuthAdapterModuleBase
 {
     private static readonly string[] DefaultRoles = ["user"];
-    private static readonly string[] AdminRoles = ["admin"];
     private const int MinPasswordLength = 8;
 
     private readonly BesPasswordService _passwords;
@@ -68,7 +66,7 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
         var binding = BesPasswordService.TryReadBinding(request.ExistingBindingPayload.Span);
         if (binding is null)
         {
-            // No binding yet — login requires SeedAdminBinding or UpdateUserBinding ceremony bind.
+            // No binding yet — login requires UpdateUserBinding ceremony bind (claim or selfRegister).
             _logger.LogInformation("Authenticate rejected for {User}: no binding payload.", username);
             return Task.FromResult(Denied());
         }
@@ -79,7 +77,7 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
             return Task.FromResult(Denied());
         }
 
-        // AUTH-ROLE-001: roles from binding; SeedAdminBinding alone creates admin. Missing roles → user.
+        // AUTH-ROLE-001: roles from binding; host invite sets admin on claim bind. Missing roles → user.
         var roles = binding.Roles.Count > 0 ? binding.Roles.ToArray() : DefaultRoles;
         var mustRotate = binding.MustRotate;
 
@@ -153,40 +151,6 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
         };
     }
 
-    public override Task<SeedAdminBindingResponse> SeedAdminBinding(
-        SeedAdminBindingRequest request,
-        ServerCallContext context)
-    {
-        // mTLS on the work port already requires a mesh CA client cert (Kithara host identity).
-        var username = string.IsNullOrWhiteSpace(request.Username) ? "admin" : request.Username.Trim();
-        var password = BesPasswordService.GenerateRandomPassword();
-        var hash = _passwords.HashPassword(password);
-        var welcome = new StringBuilder()
-            .Append("Bes SeedAdminBinding created local admin '")
-            .Append(username)
-            .Append("' with one-time password: ")
-            .Append(password)
-            .Append(". Change it via bind_form → UpdateUserBinding (must_rotate_credentials).")
-            .ToString();
-
-        _logger.LogInformation(
-            "SeedAdminBinding created subject {Subject} for user {UserId} (password only in welcome text for Kithara logs).",
-            username,
-            request.UserId);
-
-        var response = new SeedAdminBindingResponse
-        {
-            Created = true,
-            WelcomeLogText = welcome,
-            ExternalSubject = username,
-            BindingPayload = ByteString.CopyFrom(
-                BesPasswordService.BuildBindingPayloadBytes(hash, AdminRoles, mustRotate: true)),
-            MustRotateCredentials = true,
-        };
-        response.Roles.AddRange(AdminRoles);
-        return Task.FromResult(response);
-    }
-
     private UpdateUserBindingResponse Bind(UpdateUserBindingRequest request)
     {
         if (!request.ExistingBindingPayload.IsEmpty)
@@ -195,6 +159,7 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
             return Rejected("A binding already exists for this account.");
         }
 
+        // Host injects username (= User.Username) on claim bind; clients must not invent login ids.
         request.Payload.TryGetValue("username", out var username);
         request.Payload.TryGetValue("password", out var password);
         username = username?.Trim();
@@ -232,40 +197,34 @@ public sealed class AuthAdapterService : AuthAdapterModuleBase
             return Rejected("No existing credentials to update.");
         }
 
-        request.Payload.TryGetValue("password", out var currentPassword);
-        request.Payload.TryGetValue("new_password", out var newPassword);
-        if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
+        // Password-only — login username is host User.Username (immutable via bind_form).
+        request.Payload.TryGetValue("password", out var password);
+        if (string.IsNullOrWhiteSpace(password))
         {
-            _logger.LogInformation("UpdateUserBinding update rejected: password and new_password required.");
-            return Rejected("Current password and new password are required.");
+            _logger.LogInformation("UpdateUserBinding update rejected: empty bind_form bag.");
+            return Rejected("No binding fields to update.");
         }
 
-        if (!_passwords.Verify(binding.PasswordHash, currentPassword))
+        if (password.Length < MinPasswordLength)
         {
-            _logger.LogInformation("UpdateUserBinding update rejected: bad current password.");
-            return Rejected("Current password is incorrect.");
-        }
-
-        if (newPassword.Length < MinPasswordLength)
-        {
-            _logger.LogInformation("UpdateUserBinding update rejected: new_password too short.");
-            return Rejected($"New password must be at least {MinPasswordLength} characters.");
+            _logger.LogInformation("UpdateUserBinding update rejected: password too short.");
+            return Rejected($"Password must be at least {MinPasswordLength} characters.");
         }
 
         var roles = binding.Roles.Count > 0 ? binding.Roles.ToArray() : DefaultRoles;
-        var hash = _passwords.HashPassword(newPassword);
-        request.Payload.TryGetValue("username", out var usernameHint);
-        // Successful credential change clears must_rotate (AUTH-ROT).
+        var hash = _passwords.HashPassword(password);
+
+        // Empty ExternalSubject → host keeps the existing subject (pinned to User.Username).
         var response = new UpdateUserBindingResponse
         {
             Ok = true,
-            ExternalSubject = string.IsNullOrWhiteSpace(usernameHint) ? string.Empty : usernameHint.Trim(),
+            ExternalSubject = string.Empty,
             BindingPayload = ByteString.CopyFrom(
                 BesPasswordService.BuildBindingPayloadBytes(hash, roles, mustRotate: false)),
             MustRotateCredentials = false,
         };
         response.Roles.AddRange(roles);
-        _logger.LogInformation("Password rotated via UpdateUserBinding for user {UserId}.", request.UserId);
+        _logger.LogInformation("Binding updated via UpdateUserBinding for user {UserId}.", request.UserId);
         return response;
     }
 
