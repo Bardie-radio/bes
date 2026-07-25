@@ -10,7 +10,7 @@ MVP ships Bes as **gRPC only** behind Kithara. Leave seams so HTTP façades and 
 
 | Piece | Role |
 |-------|------|
-| **Auth module orchestrator** (library) | Merge `GetProviders`, route `Authenticate` / `Refresh`, JWKS verify helpers, optional `SeedAdmin`; calls adapters over gRPC (or HTTP later) |
+| **Auth module orchestrator** (library) | Merge `GetProviders`, route `Authenticate` / `Refresh`, JWKS verify helpers; calls adapters over gRPC (or HTTP later). Host-owned invite bootstrap stays in Kithara wrapper |
 | **Host ports** | Persist user/binding when `ensure_user`; policy knobs. Kithara = its user DB. External app = their store |
 | **Bes / Argus / Hecate** | Adapter containers — proof + mint/forward JWT. Command core + gRPC façade (+ optional adapter HTTP later) |
 
@@ -30,7 +30,7 @@ Primary outside path is **host + auth orch library → adapters**. Adapter HTTP 
 
 | Layer | Own | MVP | Later |
 |-------|-----|-----|-------|
-| **Commands** | `GetProviders`, `Authenticate`, `Refresh`, `SeedAdmin`, … | Yes | Same |
+| **Commands** | `GetProviders`, `Authenticate`, `Refresh`, `UpdateUserBinding`, … | Yes | Same |
 | **Command surfaces** | Façades onto commands | **gRPC** | + optional **HTTP** |
 | **Host persistence port** | Ensure user / store binding | Called via Kithara (or orch → Kithara port) | Same port interface for external hosts |
 
@@ -39,7 +39,7 @@ Prefer **Command** handlers; gRPC/HTTP only deserialize and dispatch.
 ## Security notes
 
 - Do **not** publish Bes on a Bardie public edge — Kithara remains the login BFF there.
-- `SeedAdmin` stays privileged (mTLS / equivalent), whether the caller is Kithara or another host using the orch library.
+- `UpdateUserBinding` stays privileged (mTLS / equivalent), whether the caller is Kithara or another host using the orch library.
 
 ## Out of MVP
 

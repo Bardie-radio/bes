@@ -8,7 +8,7 @@ Login + password **auth adapter** for Bardie — mints JWTs; Kithara stores user
 | **Image / Compose** | `bes` |
 | **OTel** | `bardie.auth.bes` (from `module.manifest.json`) |
 | **Slug** | `bes` |
-| **Discovery** | `form_schema` (username/password) |
+| **Discovery** | `login_form` + `bind_form` (username/password) |
 
 Architecture: [docs/architecture](docs/architecture/README.md).
 

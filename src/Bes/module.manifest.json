@@ -3,10 +3,13 @@
   "kind": "auth",
   "displayName": "Bes",
   "otelServiceName": "bardie.auth.bes",
-  "capabilities": ["seedAdmin"],
+  "capabilities": ["updateBinding"],
   "auth": {
-    "formFields": [
+    "loginFormFields": [
       { "name": "username", "label": "Username", "inputType": "text", "required": true },
+      { "name": "password", "label": "Password", "inputType": "password", "required": true }
+    ],
+    "bindFormFields": [
       { "name": "password", "label": "Password", "inputType": "password", "required": true }
     ]
   }
