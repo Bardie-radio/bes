@@ -1,10 +1,10 @@
-# Build from the parent folder that contains both `bes/` and `kithara/`
+# Build from the parent folder that contains `bes/`, `logos/`, and `kithara-logos-auth/`
 # (multi-root / Local Compose sibling layout → ProjectReference):
 #
 #   docker build -f bes/Dockerfile -t bes .
 #
-# Standalone Bes-only builds need published Bardie.* nupkgs on a NuGet feed
-# (PackageReference when ../kithara/libs is absent).
+# Standalone Bes-only builds need published Bardie.Logos.* / Bardie.Module.Auth nupkgs
+# (PackageReference when sibling Logos checkouts are absent).
 #
 # META-OPS-002: Alpine final (busybox wget healthcheck — no curl).
 # Build on Debian SDK so Grpc.Tools protoc (glibc) runs; publish for linux-musl-x64.
@@ -14,11 +14,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY kithara/Directory.Build.props kithara/Directory.Packages.props kithara/
-COPY kithara/libs/Bardie.Contracts kithara/libs/Bardie.Contracts/
-COPY kithara/libs/Bardie.Module.Channel kithara/libs/Bardie.Module.Channel/
-COPY kithara/libs/Bardie.Module.Hosting kithara/libs/Bardie.Module.Hosting/
-COPY kithara/libs/Bardie.Module.Auth kithara/libs/Bardie.Module.Auth/
+COPY logos/Directory.Build.props logos/Directory.Packages.props logos/
+COPY logos/src/Bardie.Logos.Contracts logos/src/Bardie.Logos.Contracts/
+COPY logos/src/Bardie.Logos.Channel logos/src/Bardie.Logos.Channel/
+COPY logos/src/Bardie.Logos.Hosting logos/src/Bardie.Logos.Hosting/
+
+COPY kithara-logos-auth/Directory.Build.props kithara-logos-auth/Directory.Packages.props kithara-logos-auth/
+COPY kithara-logos-auth/src/Bardie.Module.Auth kithara-logos-auth/src/Bardie.Module.Auth/
 
 COPY bes/Directory.Build.props bes/Directory.Packages.props bes/
 COPY bes/src/Bes/Bes.csproj bes/src/Bes/
@@ -26,7 +28,7 @@ RUN dotnet restore bes/src/Bes/Bes.csproj -r linux-musl-x64
 
 COPY bes/src/Bes/ bes/src/Bes/
 # Allow publish to restore again — --no-restore breaks when transitive packages
-# (e.g. Google.Protobuf via Bardie.Contracts) were incomplete in the restore layer.
+# (e.g. Google.Protobuf via Bardie.Logos.Contracts) were incomplete in the restore layer.
 RUN dotnet publish bes/src/Bes/Bes.csproj \
       -c Release -r linux-musl-x64 --self-contained false \
       -o /app/publish

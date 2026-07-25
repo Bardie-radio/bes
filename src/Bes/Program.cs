@@ -1,6 +1,6 @@
 using Bardie.Module.Auth;
-using Bardie.Module.Channel.Participant;
-using Bardie.Module.Hosting;
+using Bardie.Logos.Channel.Participant;
+using Bardie.Logos.Hosting;
 using Bes.Features.Auth;
 using Microsoft.Extensions.Options;
 
