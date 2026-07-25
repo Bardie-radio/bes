@@ -1,10 +1,10 @@
 # Contracts
 
-Bes speaks the unified auth-adapter gRPC contract — [grpc-auth-adapter](https://github.com/Bardie-radio/kithara/blob/main/docs/architecture/interfaces/grpc-auth-adapter.md). Only `GetProviders` / `Authenticate` / `Refresh` (plus Register/Health). No protocol-specific RPCs.
+Bes speaks the unified auth-adapter gRPC contract — [grpc-auth-adapter](https://github.com/Bardie-radio/kithara/blob/main/docs/architecture/interfaces/grpc-auth-adapter.md). Work verbs: `GetProviders` / `Authenticate` / `Refresh` / `UpdateUserBinding` / `SeedAdminBinding` (plus Register/Health). No protocol-specific RPCs.
 
 ## Internal shape (MVP seam)
 
-Implement work verbs as **commands** (handlers) behind a small interface. The gRPC server is a **command surface** (façade). Hosts reach Bes through the **auth module orchestrator** library (Kithara today; external apps later) — keep ensure-user / binding persistence as a **host port**, not logic inside the gRPC class. Optional adapter HTTP later: [03-optional-http](03-optional-http.md).
+Implement work verbs as **commands** (handlers) behind a small interface. The gRPC server is a **command surface** (façade). Hosts reach Bes through the **auth module harness** library (Kithara today; external apps later) — keep ensure-user / binding persistence as a **host port**, not logic inside the gRPC class. Optional adapter HTTP later: [03-optional-http](03-optional-http.md).
 
 ## Registration
 
@@ -14,26 +14,30 @@ MVP advertises **`seedAdmin` only**. Reserved for later (do not advertise until 
 
 ## GetProviders
 
-Return one provider: `id=bes` (opaque routing handle), `ui.form_schema` with typed fields (e.g. username/password). Clients render the field list without knowing Bes by name; Bes does not host pages.
+Return one provider: `id=bes` (opaque routing handle), `ui.login_form` (username/password) plus `bind_form` (password change / first bind). Clients render the field lists without knowing Bes by name; Bes does not host pages.
 
 ## Authenticate
 
-Opaque payload (typically username + password from Kithara’s `/api/auth/authenticate`):
+Opaque `login_form` bag (typically username + password from Kithara’s `/api/auth/authenticate`):
 
-1. Verify password against binding payload Kithara holds (or first-login path that asks `ensure_user` + store hash).
+1. Verify password against binding payload Kithara holds.
 2. On success: `allowed`, roles/entities as needed, `access_token` + `refresh_token` (**minted by Bes**), `ensure_user` / `binding_payload` when Kithara should persist.
-3. Honor `must_rotate_credentials` for seeded admins (and any forced rotation).
+3. Honor `must_rotate_credentials` on the token when the binding still requires rotate — **do not** accept `new_password` here.
+
+## UpdateUserBinding
+
+Same `bind_form` bag for ceremony **`bind`** (admin register / first bind) and **`update`** (forced rotate + voluntary change). Clear `must_rotate` on successful update. Authenticate never mutates bindings.
 
 ## Refresh
 
 Bes owns refresh for its tokens — validate refresh, mint new access (+ rotate refresh if designed that way). Kithara proxies `POST /api/auth/refresh` → Bes `Refresh`.
 
-## SeedAdmin
+## SeedAdminBinding
 
-When Kithara calls `SeedAdmin` (empty DB): create admin with random secret, return welcome log text + binding material. Only accept calls authenticated as Kithara. See [kithara auth adapter contract](https://github.com/Bardie-radio/kithara/blob/main/docs/architecture/interfaces/grpc-auth-adapter.md).
+When Kithara invents DEFAULT_ADMIN and calls `SeedAdminBinding` (empty DB): return random secret + binding material + welcome log text. Only accept calls authenticated as Kithara. See [kithara auth adapter contract](https://github.com/Bardie-radio/kithara/blob/main/docs/architecture/interfaces/grpc-auth-adapter.md).
 
 ## Binding payload (typical)
 
-Password hash, reset metadata — stored in Kithara `UserAuthBinding.payload` for provider slug `bes`. Bes has **no** separate auth DB.
+Password hash, roles, must-rotate flag — stored in Kithara `UserAuthBinding.payload` for provider slug `bes`. Bes has **no** separate auth DB.
 
 **Read next:** [mvp/v0.1-scope.md](mvp/v0.1-scope.md)

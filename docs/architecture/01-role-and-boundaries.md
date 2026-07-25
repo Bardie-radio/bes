@@ -7,7 +7,7 @@ Bes is the MVP **login + password** provider. Clients never call Bes on the publ
 - Password verify (and hash material Bes asks Kithara to store on the binding)
 - **Minting** access + refresh JWTs; refresh semantics for Bes-issued tokens
 - Publishing **JWKS** at register so Kithara can verify
-- `GetProviders` descriptor with `form_schema` (fields for clients to render)
+- `GetProviders` descriptor with `login_form` + `bind_form` (fields for clients to render)
 - OTLP as `bardie.auth.bes`
 - JWT mint / refresh TTL knobs (on Bes, not Kithara)
 
