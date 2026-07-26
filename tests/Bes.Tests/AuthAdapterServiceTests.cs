@@ -1,6 +1,6 @@
 using Bardie.Auth.V1;
 using Bardie.Module.Auth;
-using Bardie.Module.Channel.Manifest;
+using Bardie.Logos.Channel.Manifest;
 using Bes.Features.Auth;
 using Google.Protobuf;
 using Microsoft.Extensions.Logging.Abstractions;

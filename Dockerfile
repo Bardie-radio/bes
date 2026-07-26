@@ -1,10 +1,8 @@
-# Build from the parent folder that contains both `bes/` and `kithara/`
-# (multi-root / Local Compose sibling layout → ProjectReference):
+# Build from this repo (or compose context ../bes):
 #
-#   docker build -f bes/Dockerfile -t bes .
+#   docker build -t bes .
 #
-# Standalone Bes-only builds need published Bardie.* nupkgs on a NuGet feed
-# (PackageReference when ../kithara/libs is absent).
+# Restores Bardie.Logos.* / Bardie.Module.Auth from nuget.org.
 #
 # META-OPS-002: Alpine final (busybox wget healthcheck — no curl).
 # Build on Debian SDK so Grpc.Tools protoc (glibc) runs; publish for linux-musl-x64.
@@ -14,20 +12,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY kithara/Directory.Build.props kithara/Directory.Packages.props kithara/
-COPY kithara/libs/Bardie.Contracts kithara/libs/Bardie.Contracts/
-COPY kithara/libs/Bardie.Module.Channel kithara/libs/Bardie.Module.Channel/
-COPY kithara/libs/Bardie.Module.Hosting kithara/libs/Bardie.Module.Hosting/
-COPY kithara/libs/Bardie.Module.Auth kithara/libs/Bardie.Module.Auth/
+COPY Directory.Build.props Directory.Packages.props ./
+COPY src/Bes/Bes.csproj src/Bes/
+RUN dotnet restore src/Bes/Bes.csproj -r linux-musl-x64
 
-COPY bes/Directory.Build.props bes/Directory.Packages.props bes/
-COPY bes/src/Bes/Bes.csproj bes/src/Bes/
-RUN dotnet restore bes/src/Bes/Bes.csproj -r linux-musl-x64
-
-COPY bes/src/Bes/ bes/src/Bes/
+COPY src/Bes/ src/Bes/
 # Allow publish to restore again — --no-restore breaks when transitive packages
-# (e.g. Google.Protobuf via Bardie.Contracts) were incomplete in the restore layer.
-RUN dotnet publish bes/src/Bes/Bes.csproj \
+# (e.g. Google.Protobuf via Bardie.Logos.Contracts) were incomplete in the restore layer.
+RUN dotnet publish src/Bes/Bes.csproj \
       -c Release -r linux-musl-x64 --self-contained false \
       -o /app/publish
 
