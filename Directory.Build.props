@@ -5,12 +5,5 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <!-- Sibling multi-root: ProjectReference when Logos (+ kind) checkouts exist; else PackageReference. -->
-    <LogosPath Condition="Exists('$(MSBuildThisFileDirectory)../logos/src')">$(MSBuildThisFileDirectory)../logos/src</LogosPath>
-    <KitharaLogosAuthPath Condition="Exists('$(MSBuildThisFileDirectory)../kithara-logos-auth/src')">$(MSBuildThisFileDirectory)../kithara-logos-auth/src</KitharaLogosAuthPath>
-    <BardieLogosContractsVersion>0.1.0</BardieLogosContractsVersion>
-    <BardieLogosChannelVersion>0.1.0</BardieLogosChannelVersion>
-    <BardieLogosHostingVersion>0.1.0</BardieLogosHostingVersion>
-    <BardieModuleAuthVersion>0.1.0</BardieModuleAuthVersion>
   </PropertyGroup>
 </Project>

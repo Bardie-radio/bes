@@ -17,18 +17,17 @@ Architecture: [docs/architecture](docs/architecture/README.md).
 ```text
 src/Bes/                 ASP.NET host (gRPC AuthAdapter + Module.* participant)
   module.manifest.json   Static Register identity + OTel name
-Dockerfile               Multi-stage; build from parent dir with sibling logos/ + kithara-logos-auth/
-Directory.Build.props    ProjectReference ↔ PackageReference hybrid
+Dockerfile               Multi-stage; restores Bardie.* from nuget.org
+Directory.Packages.props Pins Bardie.Logos.* / Bardie.Module.Auth
 ```
 
 ## Libs
 
-When `../logos/src` exists (multi-root workspace), Bes uses **ProjectReference** to `Bardie.Logos.Contracts`, `Bardie.Logos.Channel`, `Bardie.Logos.Hosting`, and (from `../kithara-logos-auth`) `Bardie.Module.Auth`. Otherwise **PackageReference** to the published `0.1.0` packages — no proto copies.
+`PackageReference` to nuget.org `Bardie.Logos.Contracts`, `Bardie.Logos.Channel`, `Bardie.Logos.Hosting`, and `Bardie.Module.Auth` (versions in `Directory.Packages.props`) — no proto copies, no sibling ProjectReferences.
 
 ```bash
 dotnet run --project src/Bes
-# Docker (from parent of bes/ + logos/ + kithara-logos-auth/):
-docker build -f bes/Dockerfile -t bes .
+docker build -t bes .
 ```
 
 Kithara contracts: [grpc-auth-adapter](https://github.com/Bardie-radio/kithara/blob/main/docs/architecture/interfaces/grpc-auth-adapter.md) · [auth-adapters](https://github.com/Bardie-radio/kithara/blob/main/docs/architecture/domains/auth-adapters.md) · [auth](https://github.com/Bardie-radio/kithara/blob/main/docs/architecture/interfaces/auth.md) · [ADR 007](https://github.com/Bardie-radio/kithara/blob/main/docs/architecture/adrs/007-auth-adapter-modules.md)
