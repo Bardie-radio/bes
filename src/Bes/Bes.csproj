@@ -10,25 +10,9 @@
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" />
-  </ItemGroup>
-
-  <!-- Multi-root / Local Compose: sibling ProjectReference when Logos + auth-kind exist. -->
-  <ItemGroup Condition="'$(LogosPath)' != ''">
-    <ProjectReference Include="$(LogosPath)/Bardie.Logos.Contracts/Bardie.Logos.Contracts.csproj" />
-    <ProjectReference Include="$(LogosPath)/Bardie.Logos.Channel/Bardie.Logos.Channel.csproj" />
-    <ProjectReference Include="$(LogosPath)/Bardie.Logos.Hosting/Bardie.Logos.Hosting.csproj" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(KitharaLogosAuthPath)' != ''">
-    <ProjectReference Include="$(KitharaLogosAuthPath)/Bardie.Module.Auth/Bardie.Module.Auth.csproj" />
-  </ItemGroup>
-
-  <!-- Standalone CI / published nupkgs. -->
-  <ItemGroup Condition="'$(LogosPath)' == ''">
     <PackageReference Include="Bardie.Logos.Contracts" />
     <PackageReference Include="Bardie.Logos.Channel" />
     <PackageReference Include="Bardie.Logos.Hosting" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(KitharaLogosAuthPath)' == ''">
     <PackageReference Include="Bardie.Module.Auth" />
   </ItemGroup>
 
