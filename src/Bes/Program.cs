@@ -57,7 +57,15 @@ var participantOptions = app.Services.GetRequiredService<IOptions<ModuleParticip
 var httpPort = ModuleHostingPorts.ResolveHttpPort(builder.Configuration);
 
 app.Logger.LogInformation(
-    "Bes starting as {Slug} ({Otel}); health HTTP :{HttpPort}; work gRPC :{Port}; host={Host}",
+    """
+
+    ======================================================================
+      BES starting — {Slug} ({Otel})
+    ----------------------------------------------------------------------
+      health HTTP :{HttpPort}  ·  work gRPC :{Port}
+      host={Host}
+    ======================================================================
+    """,
     manifest.Slug,
     manifest.OtelServiceName,
     httpPort,
